@@ -3,7 +3,7 @@ import Dropzone from 'react-dropzone';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUpload } from '@fortawesome/free-solid-svg-icons';
-import { Container, Row, Col, ListGroup, ProgressBar, Button } from 'react-bootstrap';
+import { Container, Row, ListGroup, ProgressBar, Button } from 'react-bootstrap';
 import { storage, database } from '../../Firebase';
 import ImageGrid from '../ImageGrid';
 import InfoMessage from '../Common/Message/InfoMessage';
@@ -58,19 +58,25 @@ class ImageUpload extends React.Component {
       fileDetail: file,
       fileName: null,
       percentageUploaded: 0,
+      isFileNameValid: true,
     }));
 
     this.setState({ uploadedFiles: uploadFilesList });
   }
 
   UpdateFile = (value, file) => {
-
     const uploadedFiles = this.state.uploadedFiles.map(f =>
       f.fileDetail === file.fileDetail ? value === '' ?
           { ...f, fileName: value, isFileNameValid: false} : { ...f, fileName: value, isFileNameValid: true } : f
     );
     this.setState({ uploadedFiles: uploadedFiles});
   }
+
+  removeImageFile = (file) => {
+    const uploadedFile = this.state.uploadedFiles.filter(f => f.fileDetail !== file.fileDetail);
+    this.setState({ uploadedFiles: uploadedFile });
+  }
+
 
   closeinfoMessage = () => {
     this.setState({ showinfoMessage: false });
@@ -114,7 +120,7 @@ class ImageUpload extends React.Component {
             <UploadFilesList>
               {this.state.uploadedFiles.map(file => (
               <ListGroup.Item key={file.fileDetail.path}>
-                <Button variant="outline-danger">X</Button>
+                <Button variant="outline-danger" onClick={() => this.removeImageFile(file)}>X</Button>
                 {file.fileDetail.name}
                 <InputField
                   type="text"
