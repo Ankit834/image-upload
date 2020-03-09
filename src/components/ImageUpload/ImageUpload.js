@@ -120,14 +120,14 @@ class ImageUpload extends React.Component {
             <UploadFilesList>
               {this.state.uploadedFiles.map(file => (
               <ListGroup.Item key={file.fileDetail.path}>
-                <Button variant="outline-danger" onClick={() => this.removeImageFile(file)}>X</Button>
-                {file.fileDetail.name}
+                <Button variant="outline-danger" size='sm' onClick={() => this.removeImageFile(file)}>X</Button>
+                <FileNameText>{file.fileDetail.name}</FileNameText>
                 <InputField
                   type="text"
                   placeholder="Image Tag"
                   defaultValue={file.fileName || ''}
                   onChange={(e) => this.UpdateFile(e.target.value, file)} />
-                  {!file.isFileNameValid ? <ErrorText>Please enter the Image Tag</ErrorText> : null}
+                  {!file.isFileNameValid ? <ErrorText><br></br>Please enter the Image Tag</ErrorText> : null}
                   {file.percentageUploaded > 0 ? <ProgressBar now={file.percentageUploaded} label={`${file.percentageUploaded}%`} /> : null}
               </ListGroup.Item>
               ))}
@@ -217,8 +217,7 @@ class ImageUpload extends React.Component {
 export default ImageUpload;
 
 export const DropzoneContainer = styled.div`
-  min-height: 30vh;
-  min-width: 80vh;
+  min-width: 50%;
   border: 1px dashed #505963;
   padding: 20px 33px 15px;
   background: #F5F7FA;
@@ -240,10 +239,14 @@ export const UploadIcon = styled(FontAwesomeIcon)`
 `;
 
 export const UploadFilesList = styled(ListGroup)`
-  min-width: 50%
+  min-width: 70%;
 `
 
+export const FileNameText = styled.span`
+`;
+
 export const InputField = styled.input`
+  width: 50%;
   color: #330033;
   font-size: 1em;
   border: 2px solid #6699cc;

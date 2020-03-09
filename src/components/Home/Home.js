@@ -1,4 +1,5 @@
 import React from 'react';
+import styled from 'styled-components';
 import { Container, Row } from 'react-bootstrap';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -8,7 +9,7 @@ import ImageUpload from '../ImageUpload/ImageUpload';
 class Home extends React.Component {
   render() {
     return (
-      <Container>
+      <HomeContainer>
         <Row className="justify-content-md-center mt-2">
           <FontAwesomeIcon
             icon={faChalkboard}
@@ -19,9 +20,13 @@ class Home extends React.Component {
         <Row className="justify-content-md-center mt-2">
           <ImageUpload />
         </Row>
-      </Container>
+      </HomeContainer>
     );
   }
 }
 
 export default Home;
+
+const HomeContainer = styled(Container)`
+  width: fit-content;
+`;
