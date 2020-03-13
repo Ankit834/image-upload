@@ -13,8 +13,13 @@ class ImageGrid extends React.Component {
   }
 
   componentDidMount(){
-    const imagesCollection = this.props.getImagesCollection;
-    this.setState({ imagesCollection: imagesCollection})
+    this.setState({ imagesCollection: this.props.imagesCollection});
+  }
+
+  componentDidUpdate(prevProps){
+    if(prevProps.imagesCollection.length !== this.props.imagesCollection.length){
+      this.setState({ imagesCollection: this.props.imagesCollection})
+    }
   }
 
   hideModal = () => {
@@ -22,7 +27,7 @@ class ImageGrid extends React.Component {
   }
 
   onImageClick = (image) => {
-    const imagesCollection = this.props.getImagesCollection;
+    const imagesCollection = this.props.imagesCollection;
     const activeIndex = imagesCollection.findIndex((i) => i === image);
     this.setState({ showModal: true, activeIndex: activeIndex });
   }

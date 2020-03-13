@@ -11,7 +11,6 @@ class ImagePreview extends React.Component {
   }
 
   componentDidMount(){
-    console.log(this.props.activeIndex);
     this.setState({ index: this.props.activeIndex })
   }
 
@@ -43,7 +42,7 @@ class ImagePreview extends React.Component {
               />
               <CarouselCaption>
                 <h3>{image.imageName}</h3>
-                <p>Created Date {image.createdDate.toString()}</p>
+                <p>Created Date:- {image.createdDate.toString()}</p>
               </CarouselCaption>
             </Carousel.Item>
           ))}

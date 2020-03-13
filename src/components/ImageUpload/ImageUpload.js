@@ -164,7 +164,7 @@ class ImageUpload extends React.Component {
         <Row className="justify-content-md-center mt-2">
         <ImageGrid
           imagesCollectionByDate={this.state.imagesCollectionByDate}
-          getImagesCollection={this.getImagesCollection()}
+          imagesCollection={this.state.imagesCollection}
         />
         </Row> : null }
       </Container>
@@ -204,7 +204,6 @@ class ImageUpload extends React.Component {
                   createdDate: new Date()
                 })
                 .then((docRef) => {
-                  console.log(i);
                   file.isFileUploaded = true
                   if(i === uploadedFiles.length - 1){
                     this.getAllImages();
@@ -221,7 +220,6 @@ class ImageUpload extends React.Component {
             });
           })
         } else {
-          console.log(data);
           let files = this.state.uploadedFiles;
           data.forEach(imageData => {
             files = files.map(f =>
