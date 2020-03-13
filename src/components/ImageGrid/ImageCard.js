@@ -4,28 +4,13 @@ import { Card } from 'react-bootstrap';
 import ImagePreview from '../ImagePreview';
 
 class ImageCard extends React.Component {
-  state = {
-    showModal: false,
-  }
 
-  hideModal = () => {
-    this.setState({ showModal: false });
-  }
-
-  openImagePreview = () => {
-    this.setState({ showModal: true });
-  }
   render() {
-    const{ imageDetails } = this.props;
+    const{ imageDetails, onImageClick } = this.props;
     return (
       <Fragment>
-        <ImagePreview
-          show={this.state.showModal}
-          onHide={this.hideModal}
-          image={imageDetails}
-        />
         <ImgCard>
-          <ImgBox variant='top' src={imageDetails.imageUrl} onClick={this.openImagePreview} />
+          <ImgBox variant='top' src={imageDetails.imageUrl} onClick={onImageClick} />
           <ImageText>{imageDetails.imageName}</ImageText>
       </ImgCard>
       </Fragment>

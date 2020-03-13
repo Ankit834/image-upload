@@ -1,14 +1,42 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import styled from 'styled-components';
 import { Container, Row, Col } from 'react-bootstrap';
 import ImageCard from './ImageCard';
 import ImagePreview from '../ImagePreview';
 
 class ImageGrid extends React.Component {
+
+  state = {
+    imagesCollection: [],
+    showModal: false,
+    activeIndex: 0,
+  }
+
+  componentDidMount(){
+    const imagesCollection = this.props.getImagesCollection;
+    this.setState({ imagesCollection: imagesCollection})
+  }
+
+  hideModal = () => {
+    this.setState({ showModal: false });
+  }
+
+  onImageClick = (image) => {
+    const imagesCollection = this.props.getImagesCollection;
+    const activeIndex = imagesCollection.findIndex((i) => i === image);
+    this.setState({ showModal: true, activeIndex: activeIndex });
+  }
+
   render() {
     const { imagesCollectionByDate } = this.props;
     return (
-      <Container>
+      <Fragment>
+        {this.state.showModal ? <ImagePreview
+          show={this.state.showModal}
+          onHide={this.hideModal}
+          images={this.state.imagesCollection}
+          activeIndex={this.state.activeIndex}
+        />: null}
         {imagesCollectionByDate.map((imageGroup, i) => (
             <ImgGrid key={i}>
               <DateText>{imageGroup.date}</DateText>
@@ -17,6 +45,7 @@ class ImageGrid extends React.Component {
                 <Col xs={6} md={4} key={j}>
                   <ImageCard
                   imageDetails={image}
+                  onImageClick={() => this.onImageClick(image)}
                 />
                 </Col>
 
@@ -25,7 +54,7 @@ class ImageGrid extends React.Component {
               </Row>
             </ImgGrid>
           ))}
-      </Container>
+      </Fragment>
     );
   }
 }

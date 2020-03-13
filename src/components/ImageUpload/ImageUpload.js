@@ -12,6 +12,7 @@ import InfoMessage from '../Common/Message/InfoMessage';
 class ImageUpload extends React.Component {
 
   state = {
+    imagesCollection: [],
     imagesCollectionByDate: [],
     uploadedFiles: [],
     showinfoMessage: false,
@@ -20,6 +21,10 @@ class ImageUpload extends React.Component {
 
   componentDidMount(){
     this.getAllImages();
+  }
+
+  getImagesCollection(){
+    return this.state.imagesCollection;
   }
 
   getAllImages(){
@@ -32,6 +37,7 @@ class ImageUpload extends React.Component {
           createdDate: imageData.data().createdDate.toDate()
         });
       });
+      this.setState({ imagesCollection: imagesCollection });
       const groups = imagesCollection.reduce((groups, image) => {
         const date = image.createdDate.toDateString();
         if(!groups[date]){
@@ -58,7 +64,7 @@ class ImageUpload extends React.Component {
       fileDetail: file,
       fileName: null,
       percentageUploaded: 0,
-      isFileNameValid: true,
+      fileError: null
     }));
 
     this.setState({ uploadedFiles: uploadFilesList });
@@ -67,7 +73,7 @@ class ImageUpload extends React.Component {
   UpdateFile = (value, file) => {
     const uploadedFiles = this.state.uploadedFiles.map(f =>
       f.fileDetail === file.fileDetail ? value === '' ?
-          { ...f, fileName: value, isFileNameValid: false} : { ...f, fileName: value, isFileNameValid: true } : f
+          { ...f, fileName: value, fileError: 'Image Tag cannot be empty'} : { ...f, fileName: value, fileError: null } : f
     );
     this.setState({ uploadedFiles: uploadedFiles});
   }
@@ -77,13 +83,12 @@ class ImageUpload extends React.Component {
     this.setState({ uploadedFiles: uploadedFile });
   }
 
-
   closeinfoMessage = () => {
     this.setState({ showinfoMessage: false });
   }
 
   clearUploadedFiles = () => {
-    this.setState({ allFilesUploaded: false, uploadedFiles: [] });
+    this.setState({ allFilesUploaded: false, uploadedFiles: [], showinfoMessage: false });
   }
 
   render() {
@@ -126,8 +131,9 @@ class ImageUpload extends React.Component {
                   type="text"
                   placeholder="Image Tag"
                   defaultValue={file.fileName || ''}
-                  onChange={(e) => this.UpdateFile(e.target.value, file)} />
-                  {!file.isFileNameValid ? <ErrorText><br></br>Please enter the Image Tag</ErrorText> : null}
+                  onChange={(e) => this.UpdateFile(e.target.value, file)}
+                  />
+                  {file.fileError ? <ErrorText><br></br>{file.fileError}</ErrorText> : null}
                   {file.percentageUploaded > 0 ? <ProgressBar now={file.percentageUploaded} label={`${file.percentageUploaded}%`} /> : null}
               </ListGroup.Item>
               ))}
@@ -158,6 +164,7 @@ class ImageUpload extends React.Component {
         <Row className="justify-content-md-center mt-2">
         <ImageGrid
           imagesCollectionByDate={this.state.imagesCollectionByDate}
+          getImagesCollection={this.getImagesCollection()}
         />
         </Row> : null }
       </Container>
@@ -165,7 +172,7 @@ class ImageUpload extends React.Component {
   }
 
   areFilesInValid = () => {
-    if(this.state.uploadedFiles.some(file => !file.fileName)){
+    if(this.state.uploadedFiles.some(file => file.fileError)){
       return true;
     }
     return false;
@@ -173,44 +180,58 @@ class ImageUpload extends React.Component {
 
   uploadImages = () => {
     const { uploadedFiles } = this.state;
-    console.log(uploadedFiles);
-    uploadedFiles.forEach((file, i) => {
-      const uploadTask = storage.ref(`images/${file.fileName}`).put(file.fileDetail);
-      uploadTask.on('state_changed',
-      (snapshot) => {
-        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-        const files = this.state.uploadedFiles.map(f =>
-            f.fileDetail === file.fileDetail ? { ...f, percentageUploaded: progress} : f
-          );
-        this.setState({ uploadedFiles: files });
-      },
-      (error) => {
-        console.log(error);
-      },
-      () => {
-        storage.ref('images').child(file.fileName).getDownloadURL().then(url => {
-          database.collection('imageDetails').add({
-            imageName: file.fileName,
-            imageUrl: url,
-            createdDate: new Date()
+    database.collection('imageDetails').where('imageName', 'in', uploadedFiles.map(f => f.fileName)).get()
+      .then((data) => {
+        if(!data.docs.length){
+          uploadedFiles.forEach((file, i) => {
+            const uploadTask = storage.ref(`images/${file.fileName}`).put(file.fileDetail);
+            uploadTask.on('state_changed',
+            (snapshot) => {
+              const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+              const files = this.state.uploadedFiles.map(f =>
+                  f.fileDetail === file.fileDetail ? { ...f, percentageUploaded: progress} : f
+                );
+              this.setState({ uploadedFiles: files });
+            },
+            (error) => {
+              console.log(error);
+            },
+            () => {
+              storage.ref('images').child(file.fileName).getDownloadURL().then(url => {
+                database.collection('imageDetails').add({
+                  imageName: file.fileName,
+                  imageUrl: url,
+                  createdDate: new Date()
+                })
+                .then((docRef) => {
+                  console.log(i);
+                  file.isFileUploaded = true
+                  if(i === uploadedFiles.length - 1){
+                    this.getAllImages();
+                    this.setState({
+                      allFilesUploaded: true,
+                      showinfoMessage: true,
+                    });
+                  }
+                })
+                .catch((error) => {
+                  console.log(error);
+                })
+              })
+            });
           })
-          .then((docRef) => {
-            console.log(i);
-            file.isFileUploaded = true
-            if(i === uploadedFiles.length - 1){
-              this.getAllImages();
-              this.setState({
-                allFilesUploaded: true,
-                showinfoMessage: true,
-              });
-            }
-          })
-          .catch((error) => {
-            console.log(error);
-          })
-        })
-      });
-    })
+        } else {
+          console.log(data);
+          let files = this.state.uploadedFiles;
+          data.forEach(imageData => {
+            files = files.map(f =>
+              f.fileName === imageData.data().imageName ?
+                {...f, fileError: 'Image Tag already exist'} : f
+            );
+          });
+          this.setState({ uploadedFiles: files})
+        }
+      })
   }
 }
 
