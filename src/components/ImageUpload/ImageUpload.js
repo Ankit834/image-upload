@@ -22,7 +22,7 @@ class ImageUpload extends React.Component {
   }
 
   componentDidMount(){
-    window.addEventListener('scroll', this.handleScroll, true);
+    window.addEventListener('scroll', this.handleScroll);
     this.getAllImages();
   }
 
@@ -105,7 +105,7 @@ class ImageUpload extends React.Component {
 
   handleScroll = (event) => {
     const scrollElement = event.target.getElementById('Loader')
-    if(scrollElement && Math.round(scrollElement.getBoundingClientRect().bottom) <= window.innerHeight
+    if(scrollElement && Math.floor(scrollElement.getBoundingClientRect().bottom) <= window.innerHeight
         && !this.state.allFireDataLoaded){
       this.setState({ scrollLoadCount: this.state.scrollLoadCount + 1 });
       this.getAllImages();
