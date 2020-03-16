@@ -1,7 +1,6 @@
 import React, { Fragment } from 'react';
 import styled from 'styled-components';
 import { Card } from 'react-bootstrap';
-import ImagePreview from '../ImagePreview';
 
 class ImageCard extends React.Component {
 

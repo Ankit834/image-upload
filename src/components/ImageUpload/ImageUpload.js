@@ -3,7 +3,7 @@ import Dropzone from 'react-dropzone';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUpload } from '@fortawesome/free-solid-svg-icons';
-import { Container, Row, ListGroup, ProgressBar, Button } from 'react-bootstrap';
+import { Container, Row, ListGroup, ProgressBar, Button, Spinner, Alert } from 'react-bootstrap';
 import { storage, database } from '../../Firebase';
 import ImageGrid from '../ImageGrid';
 import InfoMessage from '../Common/Message/InfoMessage';
@@ -17,9 +17,12 @@ class ImageUpload extends React.Component {
     uploadedFiles: [],
     showinfoMessage: false,
     allFilesUploaded: false,
+    scrollLoadCount: 1,
+    allFireDataLoaded: false,
   }
 
   componentDidMount(){
+    window.addEventListener('scroll', this.handleScroll, true);
     this.getAllImages();
   }
 
@@ -29,33 +32,42 @@ class ImageUpload extends React.Component {
 
   getAllImages(){
     let imagesCollection = [];
-    database.collection('imageDetails').orderBy('createdDate', 'desc').limit(30).get().then((data) => {
-      data.forEach((imageData) => {
-        imagesCollection.push({
-          imageName: imageData.data().imageName,
-          imageUrl: imageData.data().imageUrl,
-          createdDate: imageData.data().createdDate.toDate()
-        });
-      });
-      this.setState({ imagesCollection: imagesCollection });
-      const groups = imagesCollection.reduce((groups, image) => {
-        const date = image.createdDate.toDateString();
-        if(!groups[date]){
-          groups[date] = [];
+    const { scrollLoadCount, allFireDataLoaded } = this.state;
+    if(!allFireDataLoaded){
+      database.collection('imageDetails').orderBy('createdDate', 'desc').limit(scrollLoadCount * 30).get().then((data) => {
+        if(data.docs.length === this.state.imagesCollection.length){
+          this.setState({ allFireDataLoaded: true });
+          return;
         }
-        groups[date].push(image);
-        return groups;
-      }, {});
+        data.forEach((imageData) => {
+          imagesCollection.push({
+            imageName: imageData.data().imageName,
+            imageUrl: imageData.data().imageUrl,
+            createdDate: imageData.data().createdDate.toDate()
+          });
+        });
+        this.setState({ imagesCollection: imagesCollection });
+        const groups = imagesCollection.reduce((groups, image) => {
+          const date = image.createdDate.toDateString();
+          if(!groups[date]){
+            groups[date] = [];
+          }
+          groups[date].push(image);
+          return groups;
+        }, {});
 
-      const imagesCollectionByDate = Object.keys(groups).map((date) => {
-        return {
-          date,
-          images: groups[date]
-        };
+        const imagesCollectionByDate = Object.keys(groups).map((date) => {
+          return {
+            date,
+            images: groups[date]
+          };
+        });
+        this.setState({ imagesCollectionByDate: imagesCollectionByDate, loader: false });
       });
-      this.setState({ imagesCollectionByDate: imagesCollectionByDate });
+    } else {
+      return;
+    }
 
-    });
   }
 
   onDrop = (acceptedFiles) => {
@@ -89,6 +101,15 @@ class ImageUpload extends React.Component {
 
   clearUploadedFiles = () => {
     this.setState({ allFilesUploaded: false, uploadedFiles: [], showinfoMessage: false });
+  }
+
+  handleScroll = (event) => {
+    const scrollElement = event.target.getElementById('Loader')
+    if(scrollElement && Math.round(scrollElement.getBoundingClientRect().bottom) <= window.innerHeight
+        && !this.state.allFireDataLoaded){
+      this.setState({ scrollLoadCount: this.state.scrollLoadCount + 1 });
+      this.getAllImages();
+    }
   }
 
   render() {
@@ -161,12 +182,20 @@ class ImageUpload extends React.Component {
         }
 
         {this.state.imagesCollectionByDate.length > 0 ?
-        <Row className="justify-content-md-center mt-2">
+        <Row className="justify-content-md-center mt-2" id="ImageCollectionGrid">
         <ImageGrid
           imagesCollectionByDate={this.state.imagesCollectionByDate}
           imagesCollection={this.state.imagesCollection}
         />
         </Row> : null }
+        {!this.state.allFireDataLoaded ?
+        <Row id='Loader' className="justify-content-md-center mt-2">
+          <Spinner animation="grow" />Loading...
+        </Row> : <Row className="justify-content-md-center mt-2">
+          <Alert variant='dark'>
+            No More Images to Load!!!
+          </Alert>
+        </Row>}
       </Container>
     );
   }

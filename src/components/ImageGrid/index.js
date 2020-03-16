@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
 import styled from 'styled-components';
-import { Container, Row, Col } from 'react-bootstrap';
+import { Row, Col } from 'react-bootstrap';
 import ImageCard from './ImageCard';
 import ImagePreview from '../ImagePreview';
 
@@ -53,8 +53,6 @@ class ImageGrid extends React.Component {
                   onImageClick={() => this.onImageClick(image)}
                 />
                 </Col>
-
-                // </ListGroup.Item>
               ))}
               </Row>
             </ImgGrid>
