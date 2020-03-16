@@ -235,11 +235,12 @@ class ImageUpload extends React.Component {
                 .then((docRef) => {
                   file.isFileUploaded = true
                   if(i === uploadedFiles.length - 1){
-                    this.getAllImages();
                     this.setState({
                       allFilesUploaded: true,
                       showinfoMessage: true,
+                      allFireDataLoaded: false,
                     });
+                    this.getAllImages();
                   }
                 })
                 .catch((error) => {
