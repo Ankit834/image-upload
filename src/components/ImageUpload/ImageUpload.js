@@ -19,6 +19,7 @@ class ImageUpload extends React.Component {
     allFilesUploaded: false,
     scrollLoadCount: 1,
     allFireDataLoaded: false,
+    uploading: false
   }
 
   componentDidMount(){
@@ -74,7 +75,7 @@ class ImageUpload extends React.Component {
     this.clearUploadedFiles();
     const uploadFilesList = acceptedFiles.map((file) => ({
       fileDetail: file,
-      fileName: null,
+      fileName: file.name.split('.')[0],
       percentageUploaded: 0,
       fileError: null
     }));
@@ -165,8 +166,8 @@ class ImageUpload extends React.Component {
               variant="primary"
               onClick={this.uploadImages}
               disabled={this.areFilesInValid()}
-            >
-              Upload
+            >{this.state.uploading ?
+              <span><Spinner animation="grow" />Uploading</span> : 'Upload'}
             </Button> :
             <Button
             variant="primary"
@@ -190,7 +191,7 @@ class ImageUpload extends React.Component {
         </Row> : null }
         {!this.state.allFireDataLoaded ?
         <Row id='Loader' className="justify-content-md-center mt-2">
-          <Spinner animation="grow" />Loading...
+          <Spinner animation="grow" size='sm' />Loading...
         </Row> : <Row className="justify-content-md-center mt-2">
           <Alert variant='dark'>
             No More Images to Load!!!
@@ -201,7 +202,7 @@ class ImageUpload extends React.Component {
   }
 
   areFilesInValid = () => {
-    if(this.state.uploadedFiles.some(file => file.fileError)){
+    if(this.state.uploadedFiles.some(file => file.fileError) || this.state.uploading){
       return true;
     }
     return false;
@@ -212,6 +213,7 @@ class ImageUpload extends React.Component {
     database.collection('imageDetails').where('imageName', 'in', uploadedFiles.map(f => f.fileName)).get()
       .then((data) => {
         if(!data.docs.length){
+          this.setState({ uploading: true })
           uploadedFiles.forEach((file, i) => {
             const uploadTask = storage.ref(`images/${file.fileName}`).put(file.fileDetail);
             uploadTask.on('state_changed',
@@ -239,6 +241,7 @@ class ImageUpload extends React.Component {
                       allFilesUploaded: true,
                       showinfoMessage: true,
                       allFireDataLoaded: false,
+                      uploading: false
                     });
                     this.getAllImages();
                   }
